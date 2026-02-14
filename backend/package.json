@@ -4,7 +4,8 @@
   "main": "src/server.js",
   "scripts": {
     "dev": "nodemon src/server.js",
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "vercel-start":"node src/server.js"
   },
   "type": "module",
   "keywords": [],
@@ -12,8 +13,10 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
+    "inngest": "^3.44.3",
     "mern": "file:..",
     "mongoose": "^8.19.1"
   },

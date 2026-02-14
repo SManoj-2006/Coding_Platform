@@ -1,42 +1,45 @@
-import express, { json } from "express";
-import path, { dirname } from "path"
+import express from "express";
 import { ENV } from "./lib/env.js";
 import { connectDB } from "./lib/db.js";
+import cors from "cors";
+import { serve } from "inngest/express";
+import { inngest, functions } from "./lib/inngest.js";
 const app = express();
 
-const __dirname = path.resolve();
+const corsOptions = {
+    origin: ENV.CLIENT_URL || true,
+    credentials: true,
+};
 
+app.use(express.json());
+app.use(cors(corsOptions));
 
-app.get("/health",(req,res)=>{
-    res.status(200).json({msg:"success from backend (health)"})
-})
+let isConnected = false;
 
-app.get("/book",(req,res)=>{
-    res.status(200).json({msg:"success from backend (book)"})
-})
+app.use(async (req, res, next) => {
+    if (!isConnected) {
+        await connectDB();
+        isConnected = true;
+    }
+    next();
+});
 
-// make app ready for deployment
+app.use("/api/ingest", serve({ client: inngest, functions }));
 
-if(ENV.NODE_ENV == "production"){
-    app.use(express.static(path.join(__dirname,"../frontend/dist")))
+app.get("/api/health", (req, res) => {
+    res.status(200).json({ msg: "success from backend (health)" });
+});
 
-    app.get("/{*any}",(req,res)=>{
-        res.sendFile(path.join(__dirname,"../frontend","dist","index.html"));
+app.get("/api/book", (req, res) => {
+    res.status(200).json({ msg: "success from backend (book)" });
+});
+
+const port = ENV.PORT || 3000;
+
+if (!process.env.VERCEL) {
+    app.listen(port, () => {
+        console.log("Server is running:", port);
     });
 }
 
-
-
-const StartServer = async()=>{
-    
-    try {
-        await connectDB();
-        app.listen(ENV.PORT,()=>{
-        console.log("Server is running:",ENV.PORT)
-         })
-    } catch (error) {
-        console.error("Error",error);
-    }
-};
-
-StartServer();
+export default app;
