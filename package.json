@@ -9,8 +9,5 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
-  "dependencies": {
-    "localtunnel": "^2.0.2"
-  }
+  "description": ""
 }

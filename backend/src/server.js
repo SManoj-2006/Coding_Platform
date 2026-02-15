@@ -14,15 +14,6 @@ const corsOptions = {
 app.use(express.json());
 app.use(cors(corsOptions));
 
-let isConnected = false;
-
-app.use(async (req, res, next) => {
-    if (!isConnected) {
-        await connectDB();
-        isConnected = true;
-    }
-    next();
-});
 
 app.use("/api/ingest", serve({ client: inngest, functions }));
 
@@ -30,16 +21,23 @@ app.get("/api/health", (req, res) => {
     res.status(200).json({ msg: "success from backend (health)" });
 });
 
-app.get("/api/book", (req, res) => {
-    res.status(200).json({ msg: "success from backend (book)" });
-});
+if (ENV.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
-const port = ENV.PORT || 3000;
-
-if (!process.env.VERCEL) {
-    app.listen(port, () => {
-        console.log("Server is running:", port);
-    });
+  app.get("/{*any}", (req, res) => {
+    res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"));
+  });
 }
+
+const startServer = async () => {
+  try {
+    await connectDB();
+    app.listen(ENV.PORT, () => console.log("Server is running on port:", ENV.PORT));
+  } catch (error) {
+    console.error("💥 Error starting the server", error);
+  }
+};
+
+startServer();
 
 export default app;
